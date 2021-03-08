@@ -15,7 +15,7 @@ def r2(x0 = 0.1, z = 3.14, size = 5, k = 3, c = 0.5, m = 1):
     for x in range(size):
         new = 0.0
         for i in range(min(x, k)):
-            new += tab[-i] * a[i]
+            new += tab[-i-1] * a[i]
         new = (new+c) % m
         tab.append(new)
     return tab[2:]
