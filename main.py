@@ -8,6 +8,19 @@ def r1(x0 = 0.1, z = 3.14, size = 5):
         tab.append(tab[-1]*z - math.floor(tab[-1]*z))
     return tab[2:]
 
+def r2(x0 = 0.1, z = 3.14, size = 5, k = 3, c = 0.5, m = 1):
+
+    a = r1(x0, z, k)
+    tab = [c % m]
+    for x in range(size):
+        new = 0.0
+        for i in range(min(x, k)):
+            new += tab[-i] * a[i]
+        new = (new+c) % m
+        tab.append(new)
+    return tab[2:]
+
+
 def hist(x0 = 0.1, z = 3.14, size = 10**5):
     plt.hist(r1(x0, z, size))
     plt.title("x0 = "+str(x0) + ", z = "+str(z))
@@ -41,4 +54,7 @@ def varDraw(start = 0, stop = 15, samples = 10**3, subsamples = 10**2, other = 0
         plt.title("Wariancja rozkładu: z = " + str(other) + ", x0 = OX")
     plt.show()
 
-varDraw()
+r = r2(0.1, 3.14, 10**5, 15)
+plt.hist(r)
+plt.title("K = 100")
+plt.show()
