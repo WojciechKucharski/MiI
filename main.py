@@ -1,6 +1,9 @@
-from generator import random
+from generator import *
 import matplotlib.pyplot as plt
 from functions import *
+import numpy as np
+import math
 
-plt.hist(random(10**5, True))
-plt.show()
+X = r1(10**5, z = 1.2)
+
+loop(lin = [0, 2, 5])
