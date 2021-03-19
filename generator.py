@@ -39,3 +39,34 @@ def correct(x):
     except:
         x = 1
     return x
+
+
+def rozk1(x):
+    y = []
+    for i in x:
+        y.append(i**0.5)
+    return y
+
+def rozk2(x):
+    y = []
+    for i in x:
+        if i<0.5:
+            y.append(-1 + (2*i)**0.5)
+        else:
+            y.append(1 - (2-2*i)**0.5)
+    return y
+
+def rozk3(x):
+    y = []
+    for i in x:
+        y.append(-math.log(1-i, math.e))
+    return y
+
+def rozk4(x, b = 1, u = 0):
+    y = []
+    for i in x:
+        if i<0.5:
+            y.append(u+b*(math.log(2*i, math.e)))
+        else:
+            y.append(u - b*(math.log(2-2*i, math.e)))
+    return y

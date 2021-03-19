@@ -4,35 +4,14 @@ from functions import *
 import numpy as np
 import math
 import random as r
-def double(samples = 10**5, type = 0):
-    if type == 0:
-        X = np.linspace(0, 1, samples)
-    if type == 1:
-        X = r1(samples, z = 1.1)
-    if type == 2:
-        X = r2(samples)
-    if type == 3:
-        X = np.random.rand(samples)
-
-    W = []
-    for i in range(len(X) - 1):
-        W.append(X[i] * X[i + 1])
-
-    return X
 
 
-for i in range(4):
-    plt.hist(double(type = i, samples=10**5))
-    plt.show()
+x = np.linspace(0.00001, 0.9999999, 10**4)
 
+x = rozk4(x, b=9, u =19)
 
-
-
-
-
-
-
-
+plt.hist(x, 50)
+plt.show()
 
 
 
