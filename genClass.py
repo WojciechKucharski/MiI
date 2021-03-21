@@ -10,6 +10,12 @@ def histArr(X, nbins = 10, var = False):
         return np.var(nbins * a / len(X))
     return nbins * a / len(X)
 
+def Funkcja_zadanie_2(x):
+    if x < 1/100:
+        return 50
+    else:
+        return 50/99
+
 class generator:
     def __init__(self, type = 1, x0 = math.pi, zk = math.pi ** 3, distr = 0):
         self.distr = int(distr)
@@ -80,8 +86,8 @@ class generator:
 
 
 
-class reject:
-    def __init__(self, a = -1, b = 1, d = 1, fun = "abs(1-x)"):
+class reject: #TODO
+    def __init__(self, a = -1, b = 1, d = 1, fun = "1-abs(x)"):
         self.a = min(a, b)
         self.b = max(a, b)
         self.d = d
@@ -94,7 +100,7 @@ class reject:
 
     def rand(self, size = 1):
         z = []
-        while len(y) < size:
+        while len(z) < size:
             y = self.g.rand() * self.d
             x = self.dx
             if y < eval(self.fun):
@@ -104,7 +110,7 @@ class reject:
         return z
 
 
-class reject2:
+class reject2: #TODO
     def __init__(self,
                  c = (2*math.e/math.pi)**0.5, dis = 4,
                  fun = "math.exp(-0.5*x**2)*((2*math.pi)**(-0.5))"):
@@ -121,7 +127,6 @@ class reject2:
 
             x = self.n.rand()
             y = self.c * 0.5 * math.exp(-abs(x)) * self.g.rand()
-            #y = self.g.rand() * self.c
             if y < eval(self.fun):
                 z.append(x)
 
