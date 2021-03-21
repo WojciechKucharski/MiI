@@ -120,8 +120,8 @@ class reject2:
         while len(z) < size:
 
             x = self.n.rand()
-            #y = self.c * 0.5 * math.exp(-abs(x)) * self.g.rand()
-            y = self.g.rand() * self.c
+            y = self.c * 0.5 * math.exp(-abs(x)) * self.g.rand()
+            #y = self.g.rand() * self.c
             if y < eval(self.fun):
                 z.append(x)
 
