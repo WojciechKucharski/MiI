@@ -16,11 +16,10 @@ plt.hist(E.rand(samples), 100)
 plt.title("Zadanie 1")
 plt.show()
 
-""" NIE DZIALA
 U = reject(a = 0, b = 1, d = 50, fun = "Funkcja_zadanie_2(x)")
-plt.hist(U.rand(samples), 100)
+plt.hist(U.rand(samples/100), 100)
 plt.title("Zadanie 2")
-plt.show()"""
+plt.show()
 
 G = reject(a = -1, b = 1, d = 1, fun = "(1-x*x)**0.5")
 plt.hist(G.rand(samples), 100)
