@@ -136,8 +136,57 @@ class reject2: #TODO
             return z
 
 
+def analyse(data, nbins = 100):
+    output = np.zeros(nbins)
+    n = len(data)
+    for x in data:
+        output[int(x * nbins)] += 1 #nbins / n
+    return output
 
+def hist(data, nbins = 100):
+    data = analyse(data, nbins)
+    t = np.linspace(0, 1, nbins)
+    plt.stem(t, data)
+    plt.show()
 
+def chisquare(data, nbins = 100):
+    n = len(data)
+    data = analyse(data, nbins)
+    output = 0.0
+    for x in data:
+        output += (x - n / nbins) ** 2
+    return output * nbins / n
+
+def mean(data):
+    output = 0.0
+    n = len(data)
+    for x in data:
+        output += x / n
+    return output
+
+def var(data, m = None):
+    n = len(data)
+    if m is None:
+        m = mean(data)
+    output = 0.0
+    for x in data:
+        output += (m - x)**2 / n
+    return output
+
+def autocorr(data, dt, m = None, v = None):
+    n = len(data)
+    if m is None:
+        m = mean(data)
+    if v is None:
+        v = var(data, m)
+    if type(dt) is int:
+        dt = [dt]
+    output = []
+    for dx in dt:
+        output.append(0)
+        for i in range(n):
+            output[-1] += 1 / (v * n) * (data[i] - m) * (data[(i + dx) % n] - m)
+    return output
 
 
 
