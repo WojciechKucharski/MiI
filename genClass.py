@@ -1,6 +1,7 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import random as randLib
 
 def histArr(X, nbins = 10, var = False):
     Xmin, Xmax = np.min(X), np.max(X)
@@ -22,7 +23,7 @@ class generator:
         self.x0 = float(x0) % 1
         if self.x0 in [0.0, 1.0]:
             self.x0 = 1 / 3
-        if type in [0, 1]:
+        if type in [0, 1, 2]:
             self.type = type
         else:
             self.type = 1
@@ -61,6 +62,12 @@ class generator:
             tab.append((new + self.x0) % 1)
         self.x0 = tab[-1]
         return tab[-size:]
+
+    def r3(self, size):
+        tab = []
+        for _ in range(size):
+            tab.append(randLib.random())
+        return tab
 
 
     def dis0(self, x):
@@ -173,7 +180,7 @@ def var(data, m = None):
         output += (m - x)**2 / n
     return output
 
-def autocorr(data, dt, m = None, v = None):
+def autocorr(data, dt, m = None, v = None, printprogress = False):
     n = len(data)
     if m is None:
         m = mean(data)
@@ -186,11 +193,15 @@ def autocorr(data, dt, m = None, v = None):
         output.append(0)
         for i in range(n):
             output[-1] += 1 / (v * n) * (data[i] - m) * (data[(i + dx) % n] - m)
+        if printprogress:
+            print(f"{len(output)}/{len(dt)}")
     return output
 
 
-
-
+def dual(data):
+    for i in range(len(data) - 1):
+        data[i] = data[i+1] * data[i]
+    return data[:-1]
 
 
 
