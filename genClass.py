@@ -222,7 +222,7 @@ class numeric:
         output = []
         for i in range(size):
             output.append(
-                self.reversed[math.floor(self.N * random.random())]
+                self.reversed[math.floor(self.N * randLib.random())]
             )
         return output
 
@@ -248,9 +248,3 @@ class numeric:
         self.reversed = g
 
 
-
-
-r = numeric(-4, 4, 10000, "math.exp(-0.5*x**2)*(2*math.pi)**(-0.5)")
-R = r.rand(10**6)
-plt.hist(R, 150)
-plt.show()
