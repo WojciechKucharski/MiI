@@ -2,6 +2,9 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import random as randLib
+import struct
+def binary(num):
+    return ''.join(bin(ord(c)).replace('0b', '').rjust(8, '0') for c in struct.pack('!f', num))
 
 def histArr(X, nbins = 10, var = False):
     Xmin, Xmax = np.min(X), np.max(X)
@@ -46,7 +49,9 @@ class generator:
     def r1(self, size):
         tab = [self.x0 % 1]
         for x in range(size):
-            tab.append(tab[-1] * self.zk - math.floor(tab[-1] * self.zk))
+            #new = tab[-1] * self.zk - math.floor(tab[-1] * self.zk)
+            new = (tab[-1] * self.zk)%1
+            tab.append(new)
         self.x0 = tab[-1]
         return tab[-size:]
 
@@ -55,7 +60,7 @@ class generator:
         for x in range(int(self.zk)):
             a.append(math.pi**(x+1) % 2)
         tab = [self.x0 % 1]
-        for x in range(size):
+        for x in range(size + self.zk):
             new = 0.0
             for i in range(min(x + 1, int(self.zk))):
                 new += tab[-i - 1] * a[i]
@@ -93,50 +98,43 @@ class generator:
 
 
 
-class reject: #TODO
-    def __init__(self, a = -1, b = 1, d = 1, fun = "1-abs(x)"):
-        self.a = min(a, b)
-        self.b = max(a, b)
-        self.d = d
-        self.fun = fun
-        self.g = generator(type = 0, zk = 123.45, x0 = 0.345)
+class reject1:
+    def __init__(self, a=-1, b=1, d=1, func="1-abs(x)"):
+        self.abd = [min(a, b), max(a, b), abs(d)]
+        self.f = func
 
-    @property
-    def dx(self):
-        return self.a + (self.b - self.a) * self.g.rand()
+    def evaluate(self, fun, x):
+        return eval(fun)
 
     def rand(self, size = 1):
         z = []
         while len(z) < size:
-            y = self.g.rand() * self.d
-            x = self.dx
-            if y < eval(self.fun):
+            y = randLib.random() * self.abd[2]
+            x = self.abd[0] + (self.abd[1] - self.abd[0]) * randLib.random()
+            if y < self.evaluate(self.f, x):
                 z.append(x)
         if size == 1:
             return z[0]
         return z
 
 
-class reject2: #TODO
-    def __init__(self,
-                 c = (2*math.e/math.pi)**0.5, dis = 4,
-                 fun = "math.exp(-0.5*x**2)*((2*math.pi)**(-0.5))"):
-        self.c = c
-        self.fun = fun
-        self.dis = dis
-        self.n = generator(type = 0, zk = 73.45, x0 = 0.355, distr = dis)
-        self.g = generator(type = 1, zk = 93.45, x0 = 0.769)
+class reject2:
+    def __init__(self, c = (2*math.e/math.pi)**0.5,
+                 g = "0.5*math.exp(-abs(x))",
+                 G = "(x<0.5)*(math.log(2*x))+(x>=0.5)*(-math.log(2-2*x))",
+                 f = "math.exp(-0.5*x**2)*((2*math.pi)**(-0.5))"):
+        self.c, self.g, self.G, self.f  = c, g, G, f
+
+    def evaluate(self, fun, x):
+        return eval(fun)
 
     def rand(self, size = 1):
         z = []
-
         while len(z) < size:
-
-            x = self.n.rand()
-            y = self.c * 0.5 * math.exp(-abs(x)) * self.g.rand()
-            if y < eval(self.fun):
+            x = self.evaluate(self.G, randLib.random())
+            y = self.c * self.evaluate(self.g, x) * randLib.random()
+            if y < self.evaluate(self.f, x):
                 z.append(x)
-
         if size == 1:
             return z[0]
         else:
@@ -204,13 +202,55 @@ def dual(data):
     return data[:-1]
 
 
+def multi_hist(z = [1.1, 2.2, 3.3]):
+    r = generator(type=0)
+    fig, axs = plt.subplots(len(z))
+    for i in range(len(z)):
+        r.zk = z[i]
+        axs[i].hist(r.rand(10 ** 5), 25)
+        axs[i].set_title(f"z = {z[i]}")
+    plt.show()
+
+
+
+class numeric:
+    def __init__(self, a, b, N, fun):
+        self.N = N
+        self.calculate(fun, a, b)
+
+    def rand(self, size):
+        output = []
+        for i in range(size):
+            output.append(
+                self.reversed[math.floor(self.N * random.random())]
+            )
+        return output
+
+    def calculate(self, fun, a, b):
+        t = np.linspace(a, b, self.N) #OX dystrybuanty
+        distr = [0] #Oy dystrybuanty
+        for i in range(1, self.N):
+            x = a + i * (b - a) / self.N
+            distr.append(distr[-1] + eval(fun))
+        for i in range(len(distr)):
+            distr[i] /= max(distr) #normalizacja
+
+        maxj = 0
+        g = np.linspace(0, 1, self.N)
+        for i in range(self.N):
+            for j in range(max(0, maxj - 2), self.N - 1):
+                if g[i] > distr[j] and g[i] <= distr[j + 1]:
+                    maxj = j
+                    g[i] = (t[j] + t[j + 1])/2
+                    break
+        g[0] = g[1]
+        self.distr = distr
+        self.reversed = g
 
 
 
 
-
-
-
-
-
-
+r = numeric(-4, 4, 10000, "math.exp(-0.5*x**2)*(2*math.pi)**(-0.5)")
+R = r.rand(10**6)
+plt.hist(R, 150)
+plt.show()
