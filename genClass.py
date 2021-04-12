@@ -32,7 +32,6 @@ class generator:
     def r1(self, size):
         tab = [self.x0 % 1]
         for x in range(size):
-            #new = tab[-1] * self.zk - math.floor(tab[-1] * self.zk)
             new = (tab[-1] * self.zk)%1
             tab.append(new)
         self.x0 = tab[-1]
@@ -239,3 +238,12 @@ def histArr(X, nbins = 10, var = False):
     if var:
         return np.var(nbins * a / len(X))
     return nbins * a / len(X)
+
+#########################################################################################################################################################
+def varEstimator(data, biased = False):
+    m = mean(data)
+    n = len(data)
+    output = 0.0
+    for x in data:
+        output += ((x - m)**2) / (n+1-biased)
+    return output
