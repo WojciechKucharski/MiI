@@ -18,10 +18,10 @@ Script contains function for testing lists filled with numbers:
 * chi-square test
 *
 ## Estimators
-Script contains estimator for:
-* mean
-* variance, biased
-* variance, unbiased
-* cumulative distribution function
-* kernel based distribution function
-* various error calculators
+Script contains:
+* mean estimator
+* variance estimator, biased
+* variance estimator, unbiased
+* cumulative distribution function estimator
+* kernel based distribution function estimator
+* various error or variance of estimator calculators
