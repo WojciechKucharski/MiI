@@ -59,7 +59,6 @@ class Tester:
             return [float(np.mean([i / (i + 1) * float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
         raise Exception("Something went wrong while estimating parameter")
 
-
     def Err(self, parameter: str, value: float, N: List[int], L: int = 1) -> List[float]:
         if parameter not in ["u", "s", "S"]:
             raise Exception(f"Estimator of parameter {parameter} is not supported")
@@ -68,9 +67,9 @@ class Tester:
         elif parameter == "s":
             return [float(np.mean([(value - float(np.var(self.rand(i)))) ** 2 for _ in range(L)])) for i in N]
         elif parameter == "S":
-            return [float(np.mean([(value - i / (i + 1) * float(np.var(self.rand(i)))) ** 2 for _ in range(L)])) for i in N]
+            return [float(np.mean([(value - i / (i + 1) * float(np.var(self.rand(i)))) ** 2 for _ in range(L)])) for i
+                    in N]
         raise Exception("Something went wrong while estimating parameter")
-
 
     def FN(self, N: int, X: List[float]) -> List[float]:
         data = self.rand(N)
@@ -88,14 +87,18 @@ class Tester:
         output = 0
         for _ in range(L):
             data = self.rand(N)
-            output += float(np.mean([(self.CDF(x) - float(np.mean([float(Xn <= x) for Xn in data]))) ** 2 for x in X])) / L
+            output += float(
+                np.mean([(self.CDF(x) - float(np.mean([float(Xn <= x) for Xn in data]))) ** 2 for x in X])) / L
         return output
 
-    def ErrfN(self, N: int, X: List[float], L: int = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)", hN: float = 1) -> float:
+    def ErrfN(self, N: int, X: List[float], L: int = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)",
+              hN: float = 1) -> float:
         output = 0
         for _ in range(L):
             data = self.rand(N)
-            output += float(np.mean([(self.PDF(x) - 1 / hN * float(np.mean([evaluate(kernel, (Xn - x) / hN) for Xn in data]))) ** 2 for x in X])) / L
+            output += float(np.mean(
+                [(self.PDF(x) - 1 / hN * float(np.mean([evaluate(kernel, (Xn - x) / hN) for Xn in data]))) ** 2 for x in
+                 X])) / L
         return output
 
     def varFN(self, N: int, X: List[float], L: int = 1) -> List[float]:
@@ -107,20 +110,24 @@ class Tester:
                 output[i] += new[i]
         return output
 
+
 def cauchy_generator(mu: float, sigma: float):
     return generator2(
-    PDF = f"1 / (math.pi * {sigma} (1 + ((x - {mu}) / {sigma}) ** 2))",
-    CDF = f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
-    Quantile = f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
+        PDF=f"1 / (math.pi * {sigma} (1 + ((x - {mu}) / {sigma}) ** 2))",
+        CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
+        Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
     )
+
 
 def normal_generator(mu: float, sigma: float):
     return generator2(
-    PDF = f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
-    CDF = f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
-    Quantile = "normal",
-    mu = mu, sigma = sigma
+        PDF=f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
+        CDF=f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
+        Quantile="normal",
+        mu=mu, sigma=sigma
     )
 
-unit_generator = generator2(PDF = "float(x<1 and x>0)", CDF ="float(x<1 and x>0) * x + float(x>=1)", Quantile = "x")
-triangle_generator = generator2(PDF = "float(float(x<1 and x>0) * x * 2)", CDF = "float(x<1 and x>0) * x ** 2", Quantile="math.sqrt(x)")
+
+unit_generator = generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x")
+triangle_generator = generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
+                                Quantile="math.sqrt(x)")
