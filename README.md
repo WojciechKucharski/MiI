@@ -23,4 +23,5 @@ Script contains estimator for:
 * variance, biased
 * variance, unbiased
 * cumulative distribution function
-And error variance calculator
+* kernel based distribution function
+* various error calculators
