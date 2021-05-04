@@ -18,7 +18,7 @@ Script contains function for testing lists filled with numbers:
 * chi-square test
 *
 ## Estimators
-Script contains:
+Script contains OOP based, easy to use:
 * mean estimator
 * variance estimator, biased
 * variance estimator, unbiased
