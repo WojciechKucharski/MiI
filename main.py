@@ -8,3 +8,4 @@ from estimators import *
 
 f = generator_file()
 print(f.rand(size=1000))
+SIEMA
