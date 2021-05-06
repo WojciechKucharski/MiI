@@ -77,9 +77,12 @@ class Tester:
         data = self.rand(N)
         return [1 / hN * float(np.mean([evaluate(kernel, (Xn - x) / hN) for Xn in data])) for x in X]
 
-    def DN(self, N: int, X: List[float]) -> float:
-        data = self.rand(N)
-        return max([self.CDF(x) - float(np.mean([float(Xn <= x) for Xn in data])) for x in X])
+    def DN(self, N: List[int], X: List[float]) -> List[float]:
+        output = []
+        for n in N:
+            data = self.rand(n)
+            output.append(max([abs(self.CDF(x) - float(np.mean([float(Xn <= x) for Xn in data]))) for x in X]))
+        return output
 
     def ErrFN(self, N: int, X: List[float], L: int = 1) -> float:
         output = 0
@@ -129,3 +132,75 @@ def normal_generator(mu: float, sigma: float):
 unit_generator = generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x")
 triangle_generator = generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
                                 Quantile="math.sqrt(x)")
+
+
+class staticDynamicSystem:
+    def __init__(self, m: str = "math.atan(x)", a: float = 1, mu: float = 0, sigma: float = 1,
+                 U: List[float] = [-2, 2]):
+        self.m, self.a, self.mu, self.sigma, self.U = m, a, mu, sigma, U
+
+    def simulate(self, size: int):
+        Xn = list(np.random.normal(self.mu, self.sigma, size))
+        Zn = [x * (self.U[1] - self.U[0]) + self.U[0] for x in list(np.random.rand(size))]
+        Yn = [Zn[i] + evaluate(self.m, Xn[i] * self.a) for i in range(size)]
+        return Xn, Zn, Yn
+
+    def mN(self, N: int, X: List[float], hN: float = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
+        Xn, Zn, Yn = self.simulate(N)
+        for x in X:
+            print(
+            sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) , sum(
+                [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)])
+            )
+
+        return [sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) / sum(
+                [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) for x in X]
+
+    def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
+        q = [x / Q for x in np.linspace(-Q, Q, Q*2)]
+        m = [evaluate(self.m, x * self.a) for x in q]
+
+        return [1 / (2 * Q) * sum([
+                    (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel))
+                ]) for hN in h]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
