@@ -114,7 +114,7 @@ class Tester:
 
 def cauchy_generator(mu: float, sigma: float):
     return generator2(
-        PDF=f"1 / (math.pi * {sigma} (1 + ((x - {mu}) / {sigma}) ** 2))",
+        PDF=f"1 / (math.pi * {sigma} * (1 + ((x - {mu}) / {sigma}) ** 2))",
         CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
         Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
     )
