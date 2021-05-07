@@ -3,7 +3,14 @@ import numpy as np
 from typing import List
 
 
-def evaluate(fun: str, x: float) -> float:
+def evaluate(fun: str, x):
+    if type(x) != list:
+        return evaluate2(fun, x)
+    else:
+        return [evaluate2(fun, xn) for xn in x]
+
+
+def evaluate2(fun: str, x) -> float:
     return eval(fun)
 
 
@@ -22,7 +29,6 @@ class generator_file:
     def __init__(self, path: str = "dataLab4.txt"):
         self.data = [float(x) for x in open(path, "r")]
         self.maxN = len(self.data)
-        self.PDF, self.CDF = None, None
 
     def rand(self, size: int) -> List[float]:
         output = []
@@ -30,6 +36,36 @@ class generator_file:
             output += self.data
         output += self.data[:size % self.maxN]
         return output
+
+    @property
+    def PDF(self):
+        raise Exception("PDF is not included in the file")
+
+    @property
+    def CDF(self):
+        raise Exception("CDF is not included in the file")
+
+
+def cauchy_generator(mu: float, sigma: float):
+    return generator2(
+        PDF=f"1 / (math.pi * {sigma} * (1 + ((x - {mu}) / {sigma}) ** 2))",
+        CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
+        Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
+    )
+
+
+def normal_generator(mu: float, sigma: float):
+    return generator2(
+        PDF=f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
+        CDF=f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
+        Quantile="normal",
+        mu=mu, sigma=sigma
+    )
+
+
+unit_generator = generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x")
+triangle_generator = generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
+                                Quantile="math.sqrt(x)")
 
 
 class Tester:
@@ -40,11 +76,11 @@ class Tester:
     def rand(self, size: int) -> List[float]:
         return self.g.rand(size)
 
-    def CDF(self, x: float) -> float:
-        return evaluate(self.g.CDF, x)
-
-    def PDF(self, x: float) -> float:
+    def PDF(self, x):
         return evaluate(self.g.PDF, x)
+
+    def CDF(self, x):
+        return evaluate(self.g.CDF, x)
 
     def estimator(self, parameter: str, N: List[int], L: int = 1) -> List[float]:
         if parameter not in ["u", "s", "S"]:
@@ -112,36 +148,19 @@ class Tester:
         return output
 
 
-def cauchy_generator(mu: float, sigma: float):
-    return generator2(
-        PDF=f"1 / (math.pi * {sigma} * (1 + ((x - {mu}) / {sigma}) ** 2))",
-        CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
-        Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
-    )
-
-
-def normal_generator(mu: float, sigma: float):
-    return generator2(
-        PDF=f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
-        CDF=f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
-        Quantile="normal",
-        mu=mu, sigma=sigma
-    )
-
-
-unit_generator = generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x")
-triangle_generator = generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
-                                Quantile="math.sqrt(x)")
-
-
 class staticDynamicSystem:
-    def __init__(self, m: str = "math.atan(x)", a: float = 1, mu: float = 0, sigma: float = 1,
-                 U: List[float] = [-2, 2]):
+    def __init__(self, Zn=normal_generator(0, 1), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
+                 sigma: float = 1,
+                 U: List[float] = (-2, 2)):
         self.m, self.a, self.mu, self.sigma, self.U = m, a, mu, sigma, U
+        self.Zn = Zn
+
+    def m_fun(self, x):
+        return evaluate(self.m, x * self.a)
 
     def simulate(self, size: int):
-        Xn = list(np.random.normal(self.mu, self.sigma, size))
-        Zn = [x * (self.U[1] - self.U[0]) + self.U[0] for x in list(np.random.rand(size))]
+        Xn = [x * (self.U[1] - self.U[0]) + self.U[0] for x in list(np.random.rand(size))]
+        Zn = self.Zn.rand(size)
         Yn = [Zn[i] + evaluate(self.m, Xn[i] * self.a) for i in range(size)]
         return Xn, Zn, Yn
 
@@ -149,58 +168,17 @@ class staticDynamicSystem:
         Xn, Zn, Yn = self.simulate(N)
         for x in X:
             print(
-            sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) , sum(
-                [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)])
+                sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), sum(
+                    [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)])
             )
 
         return [sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) / sum(
-                [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) for x in X]
+            [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) for x in X]
 
     def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
-        q = [x / Q for x in np.linspace(-Q, Q, Q*2)]
+        q = [x / Q for x in np.linspace(-Q, Q, Q * 2)]
         m = [evaluate(self.m, x * self.a) for x in q]
 
         return [1 / (2 * Q) * sum([
-                    (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel))
-                ]) for hN in h]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel))
+        ]) for hN in h]
