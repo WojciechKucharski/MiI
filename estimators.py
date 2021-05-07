@@ -26,7 +26,7 @@ class generator2:
 
 
 class generator_file:
-    def __init__(self, path: str = "dataLab4.txt"):
+    def __init__(self, path: str):
         self.data = [float(x) for x in open(path, "r")]
         self.maxN = len(self.data)
 
@@ -44,28 +44,6 @@ class generator_file:
     @property
     def CDF(self):
         raise Exception("CDF is not included in the file")
-
-
-def cauchy_generator(mu: float, sigma: float):
-    return generator2(
-        PDF=f"1 / (math.pi * {sigma} * (1 + ((x - {mu}) / {sigma}) ** 2))",
-        CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
-        Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
-    )
-
-
-def normal_generator(mu: float, sigma: float):
-    return generator2(
-        PDF=f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
-        CDF=f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
-        Quantile="normal",
-        mu=mu, sigma=sigma
-    )
-
-
-unit_generator = generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x")
-triangle_generator = generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
-                                Quantile="math.sqrt(x)")
 
 
 class Tester:
@@ -147,8 +125,60 @@ class Tester:
                 output[i] += new[i]
         return output
 
+def cauchy_generator(mu: float, sigma: float):
+    return Tester(generator2(
+        PDF=f"1 / (math.pi * {sigma} * (1 + ((x - {mu}) / {sigma}) ** 2))",
+        CDF=f"1 / math.pi * math.atan((x - {mu}) / {sigma}) + 0.5",
+        Quantile=f"{mu} + {sigma} * math.tan(math.pi * (x - 0.5))"
+    ))
 
-class staticDynamicSystem:
+def symetric_triangle_generator():
+    return Tester((generator2(
+        PDF="1 - abs(x) * float(x<=1 and x>=-1)",
+        CDF="float(x>1) + (0.5*x**2+0.5)*float(x>=-1 and x<0) + (-0.5*x**2+x+0.5)*float(x>=0 and x<=1)",
+        Quantile="(math.sqrt(2*x)-1)*float(x<0.5) + (math.sqrt(2-2*x)-1)*float(x>=0.5)"
+    )))
+
+def exp_generator():
+    return Tester((generator2(
+        PDF="math.exp(-x) * float(x>=0)",
+        CDF="1-math.exp(-x) * float(x>=0)",
+        Quantile="-math.log(1-x, math.exp(1))"
+    )))
+
+def laplace_generator():
+    return Tester((generator2(
+        PDF="0.5*math.exp(x) * float(x<0) + 0.5*math.exp(-x) * float(x>=0) ",
+        CDF="0.5*math.exp(x) * float(x>0) + (0.5-0.5*math.exp(-x)) * float(x<=0)",
+        Quantile="math.log(2*x,math.exp(1)) * float(x<0.5)-math.log(2-2*x,math.exp(1)) * float(x>=0.5)"
+    )))
+
+def normal_generator(mu: float, sigma: float):
+    return Tester(generator2(
+        PDF=f"1 / ({sigma} * math.sqrt(2*math.pi)) * math.exp(-0.5 * ((x - {mu}) / {sigma}) ** 2)",
+        CDF=f"0.5 * (1 + math.erf((x - {mu}) / ({sigma} * math.sqrt(2))))",
+        Quantile="normal",
+        mu=mu, sigma=sigma
+    ))
+
+def annoying_generator():
+    return Tester(generator2(
+        PDF="50 * float(x>=0 and x<0.01) + 50/99 * float(x>=0.01 and x<=1)",
+        CDF="x*50 * float(x>=0 and x<0.01) + (x * 50/99 + 49/99) * float(x>=0.01 and x<=1)",
+        Quantile="x/50*float(x<0.5) + (x * 99/50 - 49/50)*float(x>=0.5)"
+    ))
+def file_generator(path: str = "dataLab4.txt"):
+    return Tester(generator_file(path))
+
+def unit_generator():
+    return Tester(generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x"))
+
+def triangle_generator():
+    return Tester(generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
+                                Quantile="math.sqrt(x)"))
+
+
+class staticSystem:
     def __init__(self, Zn=normal_generator(0, 1), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
                  sigma: float = 1,
                  U: List[float] = (-2, 2)):
@@ -182,3 +212,12 @@ class staticDynamicSystem:
         return [1 / (2 * Q) * sum([
             (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel))
         ]) for hN in h]
+
+
+kernels = {
+    "gauss":"(2*math.pi)**(-1/2)*math.exp(-x**2/2)",
+    "tricube":"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
+    "rectangle":"float(x>=-0.5 and x<=0.5)",
+    "triangle":"1-abs(x)",
+    "epechnikov":"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
+}
