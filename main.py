@@ -6,7 +6,7 @@ import time
 from estimators import *
 gen = laplace_generator()
 
-x = list(np.linspace(-3,3,1000))
+x = np.linspace(-3,3,1000)
 
 plt.plot(
     x, evaluate(kernels["gauss"], x),

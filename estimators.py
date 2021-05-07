@@ -4,7 +4,7 @@ from typing import List
 
 
 def evaluate(fun: str, x):
-    if type(x) != list:
+    if type(x) != list and type(x) != type(np.linspace(0, 1, 3)):
         return evaluate2(fun, x)
     else:
         return [evaluate2(fun, xn) for xn in x]
