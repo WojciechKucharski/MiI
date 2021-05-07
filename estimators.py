@@ -164,7 +164,7 @@ def normal_generator(mu: float, sigma: float):
 def annoying_generator():
     return Tester(generator2(
         PDF="50 * float(x>=0 and x<0.01) + 50/99 * float(x>=0.01 and x<=1)",
-        CDF="x*50 * float(x>=0 and x<0.01) + (x * 50/99 + 49/99) * float(x>=0.01 and x<=1)",
+        CDF="x*50 * float(x>=0 and x<0.01) + (x * 50/99 + 49/99) * float(x>=0.01 and x<=1) + float(x>1)",
         Quantile="x/50*float(x<0.5) + (x * 99/50 - 49/50)*float(x>=0.5)"
     ))
 def file_generator(path: str = "dataLab4.txt"):
@@ -174,7 +174,7 @@ def unit_generator():
     return Tester(generator2(PDF="float(x<1 and x>0)", CDF="float(x<1 and x>0) * x + float(x>=1)", Quantile="x"))
 
 def triangle_generator():
-    return Tester(generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2",
+    return Tester(generator2(PDF="float(float(x<1 and x>0) * x * 2)", CDF="float(x<1 and x>0) * x ** 2 + float(x>1)",
                                 Quantile="math.sqrt(x)"))
 
 
@@ -196,14 +196,9 @@ class staticSystem:
 
     def mN(self, N: int, X: List[float], hN: float = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
         Xn, Zn, Yn = self.simulate(N)
-        for x in X:
-            print(
-                sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), sum(
-                    [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)])
-            )
 
-        return [sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) / sum(
-            [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) for x in X]
+        return [max(sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) / max(sum(
+            [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
 
     def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
         q = [x / Q for x in np.linspace(-Q, Q, Q * 2)]
