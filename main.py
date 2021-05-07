@@ -159,7 +159,7 @@ def Lab6_5(N, h, a, gen, Q=100, kernel = kernels["r"]):
     plt.ylabel("valid(h)")
     plt.title(f"Q = {Q}")
     plt.show()
-#LAB 1
+#LAB 3
 #zad1
 Lab3_1(range(1,15), 1)
 
