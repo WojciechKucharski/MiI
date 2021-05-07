@@ -218,6 +218,16 @@ kernels = {
     "gauss":"(2*math.pi)**(-1/2)*math.exp(-x**2/2)",
     "tricube":"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
     "rectangle":"float(x>=-0.5 and x<=0.5)",
-    "triangle":"1-abs(x)",
-    "epechnikov":"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
+    "triangle":"(1-abs(x)) * float(x<=1 and x>=-1)",
+    "epechnikov":"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)",
+    "g":"(2*math.pi)**(-1/2)*math.exp(-x**2/2)",
+    "tc":"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
+    "r":"float(x>=-0.5 and x<=0.5)",
+    "t":"(1-abs(x)) * float(x<=1 and x>=-1)",
+    "e":"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)",
+    3:"(2*math.pi)**(-1/2)*math.exp(-x**2/2)",
+    4:"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
+    1:"float(x>=-0.5 and x<=0.5)",
+    2:"(1-abs(x)) * float(x<=1 and x>=-1)",
+    5:"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
 }

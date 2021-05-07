@@ -6,7 +6,7 @@ import time
 from estimators import *
 gen = laplace_generator()
 
-x = list(np.linspace(-1,1,1000))
+x = list(np.linspace(-3,3,1000))
 
 plt.plot(
     x, evaluate(kernels["gauss"], x),
@@ -15,4 +15,6 @@ x, evaluate(kernels["rectangle"], x),
 x, evaluate(kernels["tricube"], x),
 x, evaluate(kernels["epechnikov"], x),
 )
+plt.legend(["Gauss", "Triangle", "Rectangle", "Tricube", "Epochnikov"])
 plt.show()
+print(kernels[1])
