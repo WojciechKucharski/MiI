@@ -105,7 +105,7 @@ class Tester:
 
     def fN(self, N: int, X: List[float], kernel: str = "float(x <= 0.5 and x >= -0.5)", hN: float = 1) -> List[float]:
         data = self.rand(N)
-        return [1 / hN * float(np.mean([evaluate(kernel, (Xn - x) / hN) for Xn in data])) for x in X]
+        return [1 / hN * float(np.mean([evaluate2(kernel, (Xn - x) / hN) for Xn in data])) for x in X]
 
     def DN(self, N: List[int], X: List[float]) -> List[float]:
         output = []
@@ -128,7 +128,7 @@ class Tester:
         for _ in range(L):
             data = self.rand(N)
             output += float(np.mean(
-                [(self.PDF(x) - 1 / hN * float(np.mean([evaluate(kernel, (Xn - x) / hN) for Xn in data]))) ** 2 for x in
+                [(self.PDF(x) - 1 / hN * float(np.mean([evaluate2(kernel, (Xn - x) / hN) for Xn in data]))) ** 2 for x in
                  X])) / L
         return output
 
@@ -152,7 +152,7 @@ def symetric_triangle_generator():
     return Tester((generator2(
         PDF="1 - abs(x) * float(x<=1 and x>=-1)",
         CDF="float(x>1) + (0.5*x**2+0.5+x)*float(x>=-1 and x<0) + (-0.5*x**2+x+0.5)*float(x>=0 and x<=1)",
-        Quantile="(math.sqrt(2*x)-1)*float(x<0.5) + (math.sqrt(2-2*x)+1)*float(x>=0.5)"
+        Quantile="float(x > 0.5) * ((2 * x) ** 0.5 - 1) + float(x <= 0.5) * (1 - (2 - 2 * x) ** 0.5)"
     )))
 
 def exp_generator():
@@ -207,7 +207,7 @@ class staticSystem:
     def simulate(self, size: int):
         Xn = [x * (self.U[1] - self.U[0]) + self.U[0] for x in list(np.random.rand(size))]
         Zn = self.Zn.rand(size)
-        Yn = [Zn[i] + evaluate(self.m, Xn[i] * self.a) for i in range(size)]
+        Yn = [Zn[i] + evaluate2(self.m, Xn[i] * self.a) for i in range(size)]
         return Xn, Zn, Yn
 
     def mN(self, N: int, X: List[float], hN: float = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)", simulated = None) -> List[float]:
@@ -216,13 +216,13 @@ class staticSystem:
         else:
             Xn, Zn, Yn = simulated[0], simulated[1], simulated[2]
 
-        return [sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) / max(sum(
-            [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
+        return [sum([Yn[i] * evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]) / max(sum(
+            [evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
 
 
     def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
         q = [x / Q for x in np.linspace(-Q, Q, Q * 2)]
-        m = [evaluate(self.m, x * self.a) for x in q]
+        m = [evaluate2(self.m, x * self.a) for x in q]
         Xn, Zn, Yn = self.simulate(N)
         return [1 / (2 * Q) * sum([
             (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel, simulated=(Xn, Zn, Yn)))
