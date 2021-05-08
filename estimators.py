@@ -68,7 +68,7 @@ class Tester:
         elif parameter == "s":
             return [float(np.mean([float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
         elif parameter == "S":
-            return [float(np.mean([i / (i + 1) * float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
+            return [float(np.mean([i / (i - 1) * float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
         raise Exception("Something went wrong while estimating parameter")
 
     def Err(self, parameter: str, value: float, N: List[int], L: int = 1) -> List[float]:
