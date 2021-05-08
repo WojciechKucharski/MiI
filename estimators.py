@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from typing import List
-
+from functools import cache
 
 def evaluate(fun: str, x):
     if type(x) != list and type(x) != type(np.linspace(0, 1, 3)):
@@ -9,7 +9,7 @@ def evaluate(fun: str, x):
     else:
         return [evaluate2(fun, xn) for xn in x]
 
-
+@cache
 def evaluate2(fun: str, x) -> float:
     return eval(fun)
 
@@ -200,7 +200,7 @@ class staticSystem:
         else:
             Xn, Zn, Yn = simulated[0], simulated[1], simulated[2]
 
-        return [max(sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) / max(sum(
+        return [sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]) / max(sum(
             [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
 
 
