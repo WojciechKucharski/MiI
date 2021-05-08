@@ -159,6 +159,8 @@ def Lab6_5(N, h, a, gen, Q=100, kernel = kernels["r"]):
     plt.ylabel("valid(h)")
     plt.title(f"Q = {Q}")
     plt.show()
+
+"""
 #LAB 3
 #zad1
 Lab3_1(range(1,15), 1)
@@ -202,14 +204,15 @@ Lab6_3(100, np.linspace(-2,2,100), [0.1, 0.2, 0.5, 1.0], 1,1)
 
 #zad4
 Lab6_4(100, np.linspace(-2,2,100), 0.5, ["rectangle", "triangle", "gauss", "epechnikov"],1, 1)
-
+"""
 #zad5
-Lab6_5(100, np.linspace(0.1,2,25), 1, 1)
+Lab6_5(1000, np.linspace(0.1,1,10), 1, 1, Q=100)
 
+"""
 #zad6 powtórzyć zad4, ale jako hN podać optymalną wartość z zad5
 optymalne_hN = 0.33 #PODAĆ
 Lab6_4(100, np.linspace(-2,2,100), optymalne_hN, ["rectangle", "triangle", "gauss", "epechnikov"],1, 1)
 
 #zad7
 Lab6_3(100, np.linspace(-2,2,100), [0.1, 0.2, 0.5, 1.0], 1,10)
-Lab6_4(100, np.linspace(-2,2,100), 0.5, ["rectangle", "triangle", "gauss", "epechnikov"],1, 10)
+Lab6_4(100, np.linspace(-2,2,100), 0.5, ["rectangle", "triangle", "gauss", "epechnikov"],1, 10)"""

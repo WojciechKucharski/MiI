@@ -179,7 +179,7 @@ def triangle_generator():
 
 
 class staticSystem:
-    def __init__(self, Zn=normal_generator(0, 1), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
+    def __init__(self, Zn=normal_generator(0, 0.05), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
                  sigma: float = 1,
                  U: List[float] = (-2, 2)):
         self.m, self.a, self.mu, self.sigma, self.U = m, a, mu, sigma, U
@@ -194,18 +194,22 @@ class staticSystem:
         Yn = [Zn[i] + evaluate(self.m, Xn[i] * self.a) for i in range(size)]
         return Xn, Zn, Yn
 
-    def mN(self, N: int, X: List[float], hN: float = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
-        Xn, Zn, Yn = self.simulate(N)
+    def mN(self, N: int, X: List[float], hN: float = 1, kernel: str = "float(x <= 0.5 and x >= -0.5)", simulated = None) -> List[float]:
+        if simulated == None:
+            Xn, Zn, Yn = self.simulate(N)
+        else:
+            Xn, Zn, Yn = simulated[0], simulated[1], simulated[2]
 
         return [max(sum([Yn[i] * evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) / max(sum(
             [evaluate(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
 
+
     def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
         q = [x / Q for x in np.linspace(-Q, Q, Q * 2)]
         m = [evaluate(self.m, x * self.a) for x in q]
-
+        Xn, Zn, Yn = self.simulate(N)
         return [1 / (2 * Q) * sum([
-            (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel))
+            (m[i] - mN) ** 2 for i, mN in enumerate(self.mN(N=N, X=q, hN=hN, kernel=kernel, simulated=(Xn, Zn, Yn)))
         ]) for hN in h]
 
 
