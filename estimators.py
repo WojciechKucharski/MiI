@@ -58,7 +58,7 @@ def var_estimator(data_in, biased, med):
     if med:
         return float(np.median([(mu - x) ** 2 for x in data_in]))
     else:
-        return 1 / (N - float(biased)) * float(np.mean([(mu - x) ** 2 for x in data_in]))
+        return 1 / (N - float(biased)) * float(sum([(mu - x) ** 2 for x in data_in]))
 
 class Tester:
     def __init__(self, generator):
@@ -66,6 +66,7 @@ class Tester:
         self.rand(5)
 
     def rand(self, size: int) -> List[float]:
+        #np.random.seed(1)
         return self.g.rand(size)
 
     def PDF(self, x):
@@ -150,21 +151,21 @@ def cauchy_generator(mu: float, sigma: float):
 def symetric_triangle_generator():
     return Tester((generator2(
         PDF="1 - abs(x) * float(x<=1 and x>=-1)",
-        CDF="float(x>1) + (0.5*x**2+0.5)*float(x>=-1 and x<0) + (-0.5*x**2+x+0.5)*float(x>=0 and x<=1)",
-        Quantile="(math.sqrt(2*x)-1)*float(x<0.5) + (math.sqrt(2-2*x)-1)*float(x>=0.5)"
+        CDF="float(x>1) + (0.5*x**2+0.5+x)*float(x>=-1 and x<0) + (-0.5*x**2+x+0.5)*float(x>=0 and x<=1)",
+        Quantile="(math.sqrt(2*x)-1)*float(x<0.5) + (math.sqrt(2-2*x)+1)*float(x>=0.5)"
     )))
 
 def exp_generator():
     return Tester((generator2(
         PDF="math.exp(-x) * float(x>=0)",
-        CDF="1-math.exp(-x) * float(x>=0)",
+        CDF="(1-math.exp(-x)) * float(x>=0)",
         Quantile="-math.log(1-x, math.exp(1))"
     )))
 
 def laplace_generator():
     return Tester((generator2(
         PDF="0.5*math.exp(x) * float(x<0) + 0.5*math.exp(-x) * float(x>=0) ",
-        CDF="0.5*math.exp(x) * float(x>0) + (0.5-0.5*math.exp(-x)) * float(x<=0)",
+        CDF="0.5*math.exp(x) * float(x<0) + (1-0.5*math.exp(-x)) * float(x>=0)",
         Quantile="math.log(2*x,math.exp(1)) * float(x<0.5)-math.log(2-2*x,math.exp(1)) * float(x>=0.5)"
     )))
 

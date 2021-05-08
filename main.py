@@ -20,38 +20,21 @@ g = [
     cauchy_generator(0,1)#10
 ]
 
-def Lab3_1(N, gen):
-    plt.plot(N, g[gen].estimator("u", N, med=True))
-    plt.xlabel("N")
-    plt.ylabel("Średnia")
-    plt.title("Esytmator średniej")
+def Lab4_2(N, X, gen, name="test"):
+    plt.plot(X, g[gen].FN(N,X), X, g[gen].CDF(X))
+    plt.xlabel("x")
+    plt.ylabel("FN")
+    plt.title(f"Dystrybuanta empiryczna, {name} ")
+    plt.legend(["Estymacja", "Oryginał"])
     plt.show()
 
-    np.random.seed(2323)
-    plt.plot(N, g[gen].estimator("s",N, med=True))
-    np.random.seed(2323)
-    plt.plot(N, g[gen].estimator("S", N,med=True))
-    plt.xlabel("N")
-    plt.ylabel("Wariancja")
-    plt.title("Estymatory wariancji")
-    plt.legend(["Obciążony sN", "Nieobciążony SN"])
-    plt.show()
 
-def Lab3_2(N, L, gen):
-    plt.plot(N, g[gen].Err("u", 0, N, L))
-    plt.xlabel("N")
-    plt.ylabel("Err")
-    plt.title(f"Błąd empiryczny estymatora średniej, L = {L}")
-    plt.show()
-    np.random.seed(seed)
-    plt.plot(N, g[gen].Err("s", 1, N, L))
-    np.random.seed(seed)
-    plt.plot(N, g[gen].Err("S", 1, N, L))
-    plt.xlabel("N")
-    plt.ylabel("Wariancja")
-    plt.title(f"Błąd empiryczny estymatora wariancji, L = {L}")
-    plt.legend(["Obciążony sN", "Nieobciążony SN"])
-    plt.show()
+"""Lab4_2(100, np.linspace(-0.1,1.1,10000), 1, "Rozkład Normalny")
+Lab4_2(100, np.linspace(-0.1,1.1,10000), 4, "Rozkład Jednostajny")
+Lab4_2(100, np.linspace(-0.1,1.1,10000), 5, "Rozkład Trójkątny")
+Lab4_2(100, np.linspace(-0.1,1.1,10000), 7, "Rozkład Laplace'a")
+Lab4_2(100, np.linspace(-0.1,1.1,10000), 8, "Rozkład Exp.")
+Lab4_2(100, np.linspace(-0.1,1.1,10000), 9, "Rozkład \"Trudny\"")"""
 
-Lab3_1(range(5, 1000, 5), gen = 10)
-#Lab3_2(range(5, 100, 2), gen = 4, L=20)
+for i in range(1,11):
+    Lab4_2(100, np.linspace(-0.1, 1.1, 10000), i, str(i))
