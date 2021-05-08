@@ -46,6 +46,20 @@ class generator_file:
         raise Exception("CDF is not included in the file")
 
 
+def mean_estimator(data_in, med):
+    if med:
+        return float(np.median(data_in))
+    else:
+        return float(np.mean(data_in))
+def var_estimator(data_in, biased, med):
+    mu = mean_estimator(data_in, med)
+    N = len(data_in)
+
+    if med:
+        return float(np.median([(mu - x) ** 2 for x in data_in]))
+    else:
+        return 1 / (N - float(biased)) * float(np.mean([(mu - x) ** 2 for x in data_in]))
+
 class Tester:
     def __init__(self, generator):
         self.g = generator
@@ -60,26 +74,27 @@ class Tester:
     def CDF(self, x):
         return evaluate(self.g.CDF, x)
 
-    def estimator(self, parameter: str, N: List[int], L: int = 1) -> List[float]:
+    def estimator(self, parameter: str, N: List[int], L: int = 1, med: bool = False) -> List[float]:
         if parameter not in ["u", "s", "S"]:
             raise Exception(f"Estimator of parameter {parameter} is not supported")
         elif parameter == "u":
-            return [float(np.mean([float(np.mean(self.rand(i))) for _ in range(L)])) for i in N]
+            return [float(np.mean([mean_estimator(self.rand(i), med) for _ in range(L)])) for i in N]
         elif parameter == "s":
-            return [float(np.mean([float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
+            return [float(np.mean([var_estimator(self.rand(i), False, med) for _ in range(L)])) for i in N]
         elif parameter == "S":
-            return [float(np.mean([i / (i - 1) * float(np.var(self.rand(i))) for _ in range(L)])) for i in N]
+            return [float(np.mean([var_estimator(self.rand(i), True, med) for _ in range(L)])) for i in N]
         raise Exception("Something went wrong while estimating parameter")
 
-    def Err(self, parameter: str, value: float, N: List[int], L: int = 1) -> List[float]:
+
+    def Err(self, parameter: str, value: float, N: List[int], L: int = 1, med: bool = False) -> List[float]:
         if parameter not in ["u", "s", "S"]:
             raise Exception(f"Estimator of parameter {parameter} is not supported")
         elif parameter == "u":
-            return [float(np.mean([(value - float(np.mean(self.rand(i)))) ** 2 for _ in range(L)])) for i in N]
+            return [float(np.mean([(value - mean_estimator(self.rand(i), med)) ** 2 for _ in range(L)])) for i in N]
         elif parameter == "s":
-            return [float(np.mean([(value - float(np.var(self.rand(i)))) ** 2 for _ in range(L)])) for i in N]
+            return [float(np.mean([(value - var_estimator(self.rand(i), False, med)) ** 2 for _ in range(L)])) for i in N]
         elif parameter == "S":
-            return [float(np.mean([(value - i / (i + 1) * float(np.var(self.rand(i)))) ** 2 for _ in range(L)])) for i
+            return [float(np.mean([(value - var_estimator(self.rand(i), True, med)) ** 2 for _ in range(L)])) for i
                     in N]
         raise Exception("Something went wrong while estimating parameter")
 

@@ -4,7 +4,7 @@ import math
 import random
 import time
 from estimators import *
-seed = 1234
+seed = 12343
 
 g = [
     file_generator(), #0
@@ -21,16 +21,16 @@ g = [
 ]
 
 def Lab3_1(N, gen):
-    plt.plot(N, g[gen].estimator("u", N))
+    plt.plot(N, g[gen].estimator("u", N, med=True))
     plt.xlabel("N")
     plt.ylabel("Średnia")
     plt.title("Esytmator średniej")
     plt.show()
 
     np.random.seed(2323)
-    plt.plot(N, g[gen].estimator("s",N))
+    plt.plot(N, g[gen].estimator("s",N, med=True))
     np.random.seed(2323)
-    plt.plot(N, g[gen].estimator("S", N))
+    plt.plot(N, g[gen].estimator("S", N,med=True))
     plt.xlabel("N")
     plt.ylabel("Wariancja")
     plt.title("Estymatory wariancji")
@@ -52,3 +52,6 @@ def Lab3_2(N, L, gen):
     plt.title(f"Błąd empiryczny estymatora wariancji, L = {L}")
     plt.legend(["Obciążony sN", "Nieobciążony SN"])
     plt.show()
+
+Lab3_1(range(5, 1000, 5), gen = 10)
+#Lab3_2(range(5, 100, 2), gen = 4, L=20)
