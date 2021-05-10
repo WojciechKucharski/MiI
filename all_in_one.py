@@ -160,6 +160,21 @@ def Lab6_5(N, h, a, gen, Q=100, kernel = kernels["r"]):
     plt.title(f"Q = {Q}")
     plt.show()
 
+def kernels_print():
+    x = np.linspace(-1, 1, 1000)
+    plt.plot(
+        x, evaluate(kernels["g"], x),
+        x, evaluate(kernels["t"], x),
+        x, evaluate(kernels["tc"], x),
+        x, evaluate(kernels["e"], x),
+        x, evaluate(kernels["r"], x)
+    )
+    plt.xlabel("x")
+    plt.ylabel("K(x)")
+    plt.title("Funkcje jądra")
+    plt.legend(["Gauss", "Trójkąt", "Tricube", "Epochnikov", "Prostokąt"])
+    plt.show()
+
 """
 #LAB 3
 #zad1

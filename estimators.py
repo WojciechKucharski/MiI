@@ -29,6 +29,8 @@ class generator_file:
     def __init__(self, path: str):
         self.data = [float(x) for x in open(path, "r")]
         self.maxN = len(self.data)
+        self.PDF_i = None
+        self.CDF_i = None
 
     def rand(self, size: int) -> List[float]:
         output = []
@@ -39,11 +41,16 @@ class generator_file:
 
     @property
     def PDF(self):
-        raise Exception("PDF is not included in the file")
+        if self.PDF_i == None:
+            raise Exception("PDF is not included in the file")
+        else:
+            return self.PDF_i
 
     @property
     def CDF(self):
-        raise Exception("CDF is not included in the file")
+        if self.CDF_i == None:
+            raise Exception("CDF is not included in the file")
+        return self.CDF_i
 
 
 def mean_estimator(data_in, med):
@@ -150,7 +157,7 @@ def cauchy_generator(mu: float, sigma: float):
 
 def symetric_triangle_generator():
     return Tester((generator2(
-        PDF="1 - abs(x) * float(x<=1 and x>=-1)",
+        PDF="(1 - abs(x)) * float(x<=1 and x>=-1)",
         CDF="float(x>1) + (0.5*x**2+0.5+x)*float(x>=-1 and x<0) + (-0.5*x**2+x+0.5)*float(x>=0 and x<=1)",
         Quantile="float(x > 0.5) * ((2 * x) ** 0.5 - 1) + float(x <= 0.5) * (1 - (2 - 2 * x) ** 0.5)"
     )))
@@ -195,7 +202,7 @@ def triangle_generator():
 
 
 class staticSystem:
-    def __init__(self, Zn=normal_generator(0, 0.05), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
+    def __init__(self, Zn=normal_generator(0, 0.2), m: str = "math.atan(x)", a: float = 1, mu: float = 0,
                  sigma: float = 1,
                  U: List[float] = (-2, 2)):
         self.m, self.a, self.mu, self.sigma, self.U = m, a, mu, sigma, U
@@ -216,8 +223,15 @@ class staticSystem:
         else:
             Xn, Zn, Yn = simulated[0], simulated[1], simulated[2]
 
-        return [sum([Yn[i] * evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]) / max(sum(
-            [evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) for x in X]
+        return [
+            
+            sum([Yn[i] * evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]) 
+            / 
+                
+                max(sum([evaluate2(kernel, (Xn[i] - x) / hN) for i in range(N)]), 0.000001) 
+                
+                for x in X]
+
 
 
     def valid(self, h: List[float], N: int, Q: int = 100, kernel: str = "float(x <= 0.5 and x >= -0.5)") -> List[float]:
@@ -246,3 +260,6 @@ kernels = {
     2:"(1-abs(x)) * float(x<=1 and x>=-1)",
     5:"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
 }
+
+def inRange(a, b, c):
+    return min(c, max(a, b))
