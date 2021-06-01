@@ -73,7 +73,7 @@ class Tester:
         self.rand(5)
 
     def rand(self, size: int) -> List[float]:
-        #np.random.seed(1)
+        #np.random.seed(8888)
         return self.g.rand(size)
 
     def PDF(self, x):
@@ -258,7 +258,12 @@ kernels = {
     4:"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
     1:"float(x>=-0.5 and x<=0.5)",
     2:"(1-abs(x)) * float(x<=1 and x>=-1)",
-    5:"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
+    5:"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)",
+    "Gauss":"(2*math.pi)**(-1/2)*math.exp(-x**2/2)",
+    "Tricube":"float(70/81*(1-abs(x)**3)**3) * float(x<=1 and x>=-1)",
+    "Prostokąt":"float(x>=-0.5 and x<=0.5)",
+    "Trójkąt":"(1-abs(x)) * float(x<=1 and x>=-1)",
+    "Epanechnikow":"float(3/4*(1-x**2)) * float(x<=1 and x>=-1)"
 }
 
 def inRange(a, b, c):
