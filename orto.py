@@ -4,8 +4,24 @@ from typing import List
 import matplotlib.pyplot as plt
 
 
+def m_function(x: float, a: float = 1) -> float:
+    if abs(x) > 2:
+        return 0
+    elif abs(x) < 1:
+        return a * x ** 2
+    else:
+        return 1
+
+
+def phi_function(k: int, x: float) -> float:
+    if k == 0:
+        return (2 * math.pi) ** (-0.5)
+    else:
+        return math.pi ** (-0.5) * math.cos(x * k)
+
+
 class StaticSystem:
-    def __init__(self, m, phi, sigma: float = 1, distr: str = "N"):
+    def __init__(self, m=m_function, phi=phi_function, sigma: float = 1, distr: str = "N"):
         self.sigma, self.distr = abs(sigma), distr
         self.m, self.phi = m, phi
 
