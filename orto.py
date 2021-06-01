@@ -98,6 +98,18 @@ class MISO:
         else:
             return XN, ZN, YN
 
+    def R(self, ZN):
+        z = np.array(ZN)
+        N = len(ZN)
+        R = np.zeros((N, N))
+        for i in range(N):
+            for j in range(N):
+                if j == i:
+                    R[i][j] = (1 + self.sigma_Z) * self.b ** 2
+                elif j == i + 1 or j == i - 1:
+                    R[i][j] = self.b * self.sigma_Z
+        return R
+
     def cov1(self, N: int):
         XN, ZN, YN = self.simulate(N=N, numpy=True)
         cov = np.linalg.inv(np.matmul(XN.T, XN)) * self.sigma_Z ** 2
@@ -106,7 +118,10 @@ class MISO:
 
     def cov2(self, N):
         XN, ZN, YN = self.simulate(N=N, numpy=True)
-        print("TODO")
+        R = self.R(ZN)
+        cov = np.linalg.inv(XN.T @ XN) @ XN.T @ R @ XN @ np.linalg.inv(XN.T @ XN)
+        plt.imshow(cov)
+        plt.show()
 
     def Err(self, N: int, L: int):
         Err = 0
