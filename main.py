@@ -74,3 +74,5 @@ def lab9_5(N: int, L: int, sigma_Z: List[float]):
 #lab8_5(N=1000)
 #lab8_5(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
 
+#lab9_5(N=1000)
+#lab9_5(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
