@@ -90,12 +90,13 @@ class MISO:
 
     def cov2(self, N):
         XN, ZN, YN = self.simulate(N=N, numpy=True)
+        print("TODO")
 
     def Err(self, N: int, L: int):
         Err = 0
-        ZN = np.array(self.Zn(N))
+        XN = np.array(self.Xn(N))
         for l in range(L):
-            XN, _, YN = self.simulate(N=N, numpy=True, ZN=ZN)
+            XN, _, YN = self.simulate(N=N, numpy=True, XN=XN)
             aN = list(np.matmul(np.linalg.inv(np.array(np.matmul(XN.T, XN))), np.matmul(XN.T, YN)))
             for i, a in enumerate(self.a):
                 aN[i] -= a
