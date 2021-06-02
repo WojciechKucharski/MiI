@@ -1,64 +1,78 @@
-"""
-def Lab7_zad2(s, N: int):
-    Xn, Zn, Yn = s.simulate(N)
-    plt.scatter(Xn, Yn)
-    plt.title("Chmura pomiarów")
-    plt.ylabel("Yn")
+from orto import *
+import numpy as np
+import math
+import cmath
+import matplotlib.pyplot as plt
+from functools import cache
+
+lab7 = StaticSystem(sigma=0.01, distr="N") # do wyboru "N" i "C"
+
+def lab7_2(N: int, size: float = 0.2):
+    Xn, _, Yn = lab7.simulate(N)
+    x = np.linspace(-math.pi, math.pi, 1000)
+    plt.plot(x, [m_function(xn) for xn in x])
+    plt.scatter(Xn, Yn, s=size)
+    plt.legend(["m(x)", "TN"])
     plt.xlabel("Xn")
+    plt.ylabel("Yn")
     plt.show()
 
-def Lab7_zad4(s, N: int, M: int, L: int):
-    x = list(np.linspace(-math.pi, math.pi, M))
-    plt.plot(x, [s.m(xn) for xn in x])
-    plt.plot(x, s.mN(N, L, x))
-    plt.xlabel("x")
-    plt.legend(["Oryginał", "mN"])
+
+def lab7_4(L: int, X: List[float], N: int = 500):
+    mN = lab7.mN(N=N, L=L, X=X)
+    x = np.linspace(-math.pi, math.pi, 1000)
+    plt.plot(x, [m_function(xn) for xn in x])
+    plt.plot(X, mN)
+    plt.legend(["m(x)", "TN"])
+    plt.xlabel("Xn")
+    plt.ylabel("Yn")
     plt.show()
 
-def Lab7_zad5(s, N: int, L: List[int], Q: int = 100):
-    plt.stem(L, s.valid(N=N, L=L, Q=Q))
+
+def lab7_5(L: List[int], Q: int = 100, N: int = 500):
+    valid = lab7.valid(N=N, L=L, Q=Q)
+    plt.plot(L, valid)
     plt.xlabel("L")
     plt.ylabel("valid(L)")
     plt.show()
 
+D = 12
 
-def m(x: float) -> float:
-    if x > 2 or x < -2:
-        return 0
-    if 2 >= x > 1 or -2 <= x < -1:
-        return 1
-    else:
-        return x ** 2
+a = list(np.random.uniform(0, 5, D))
 
+lab8 = MISO(D=D, b=0, sigma_Z=0.2, sigma_X=0.1, a=a)
 
-def phi(k: int, x: float):
-    if k == 0:
-        return (2 * math.pi) ** (-1 / 2)
-    else:
-        return math.cos(k * x) * math.pi ** (-1 / 2)
+lab9 = MISO(D=D, b=0.5, sigma_Z=0.2, sigma_X=0.1, a=a)
 
-@cache
-def H(k: int, x: float):
-    if k == 0:
-        return 1
-    if k == 1:
-        return 2 * x
-    if k == 2:
-        return 4 * x ** 2 - 2
-    else:
-        return 2 * x * H(k - 1, x) - 2 * (k - 1) * H(k - 2, x)
+def lab8_4(N: int):
+    lab8.cov1(N)
 
+def lab8_5(N: int, L: int, sigma_Z: List[float]):
+    Err = lab8.ErrInSigma(sigma=sigma_Z, N=N, L=L)
+    plt.plot(sigma_Z, Err)
+    plt.xlabel("sigma")
+    plt.ylabel("Err")
+    plt.show()
 
-s = StaticSystem(m, phi, sigma=0.1, distr="N")
+def lab9_6(N: int):
+    lab9.cov2(N)
 
-#Lab7_zad2(s, N=1000)
-#Lab7_zad4(s, N=250, M=100, L=15)
-#Lab7_zad5(s, N=250, L=list(range(1, 10)))
+def lab9_7(N: int, L: int, sigma_Z: List[float]):
+    Err = lab9.ErrInSigma(sigma=sigma_Z, N=N, L=L)
+    plt.plot(sigma_Z, Err)
+    plt.xlabel("sigma")
+    plt.ylabel("Err")
+    plt.show()
 
-L = range(1, 20)
-plt.stem(L, s.plot_alfa_k(N=250, L=L))
-plt.xlabel("k")
-plt.ylabel("a_k")
-plt.show()
+#lab7_2(N=10000, size=0.1)
+#lab7_4(L=25, X=list(np.linspace(-3, 3, 200)), N=500)
+#lab7_5(L=list(range(1,10)), Q=100, N=500)
 
-"""
+#lab7_6 to samo co 4 ale wstawić optymalne L
+#lab7_7 to samo ale na gorze zmienić "N" na "C"
+
+#lab8_4(N=1000)
+#lab8_5(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
+
+#lab9_6(N=1000)
+#lab9_7(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
