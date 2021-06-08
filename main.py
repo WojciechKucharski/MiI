@@ -5,74 +5,138 @@ import cmath
 import matplotlib.pyplot as plt
 from functools import cache
 
-lab7 = StaticSystem(sigma=0.01, distr="N") # do wyboru "N" i "C"
 
-def lab7_2(N: int, size: float = 0.2):
-    Xn, _, Yn = lab7.simulate(N)
-    x = np.linspace(-math.pi, math.pi, 1000)
-    plt.plot(x, [m_function(xn) for xn in x])
-    plt.scatter(Xn, Yn, s=size)
-    plt.legend(["m(x)", "TN"])
-    plt.xlabel("Xn")
-    plt.ylabel("Yn")
-    plt.show()
+def m_function_2(x):
+    return -x * math.exp(-(x**2))
 
-
-def lab7_4(L: int, X: List[float], N: int = 500):
-    mN = lab7.mN(N=N, L=L, X=X)
-    x = np.linspace(-math.pi, math.pi, 1000)
-    plt.plot(x, [m_function(xn) for xn in x])
-    plt.plot(X, mN)
-    plt.legend(["m(x)", "TN"])
-    plt.xlabel("Xn")
-    plt.ylabel("Yn")
-    plt.show()
+def m_function(x: float, a: float = 1) -> float:
+    x+=1
+    if abs(x) > 2:
+        return 0
+    elif abs(x) < 1:
+        return a * x ** 2
+    else:
+        return 1
 
 
-def lab7_5(L: List[int], Q: int = 100, N: int = 500):
-    valid = lab7.valid(N=N, L=L, Q=Q)
-    plt.plot(L, valid)
-    plt.xlabel("L")
-    plt.ylabel("valid(L)")
-    plt.show()
+def phi_function(k: int, x: float) -> float:
+    if k == 0:
+        return (2 * math.pi) ** (-0.5)
+    else:
+        return math.pi ** (-0.5) * math.cos(x * k)
 
-D = 12
+def phi_function_sin(k: int, x: float) -> float:
+    if k == 0:
+        return (2 * math.pi) ** (-0.5)
+    else:
+        return math.pi ** (-0.5) * math.sin(x * k)
+@cache
+def haver(k,x):
+    if k == 0:
+        return 1
+    elif k==1:
+        return 2*x
+    elif k==2:
+        return 4*x**2-2
+    else:
+        return 2*x*haver(k-1,x)-2*(k-1)*haver(k-2,x)
 
-a = list(np.random.uniform(0, 5, D))
+def mNhaver(X, L, N):
+    mN = []
+    Xn = list(np.random.uniform(-math.pi, math.pi, N))
+    Zn = list(np.random.normal(0, 0.1, N))
+    Yn = [Zn[i] + m_function(Xn[i]) for i in range(N)]
+    for x in X:
+        f,g=0,0
+        for k in range(L):
+            alfa = float(np.mean([
+                       Yn[i] * haver(k, Xn[i]) for i in range(N)]))
+            beta = float(np.mean([
+                       haver(k, Xn[i]) for i in range(N)]))
+            g += alfa * haver(k, x)
+            f += beta * haver(k, x)
+        if f==0:
+            mN.append(0)
+        else:
+            mN.append(g/f)
+    return mN
 
-lab8 = MISO(D=D, b=0, sigma_Z=0.2, sigma_X=0.1, a=a)
 
-lab9 = MISO(D=D, b=0.5, sigma_Z=0.2, sigma_X=0.1, a=a)
+def mN(X, L, N):
+    mN = []
+    Xn = list(np.random.uniform(-math.pi, math.pi, N))
+    Zn = list(np.random.normal(0, 0.1, N))
+    Yn = [Zn[i] + m_function(Xn[i]) for i in range(N)]
+    for x in X:
+        f,g=0,0
+        for k in range(L):
+            alfa = float(np.mean([
+                       Yn[i] * phi_function(k, Xn[i]) for i in range(N)]))
+            beta = float(np.mean([
+                       phi_function(k, Xn[i]) for i in range(N)]))
+            g += alfa * phi_function(k, x)
+            f += beta * phi_function(k, x)
+        if f==0:
+            mN.append(0)
+        else:
+            mN.append(g/f)
+    return mN
 
-def lab8_4(N: int):
-    lab8.cov1(N)
+def mNsin(X, L, N):
+    mN = []
+    Xn = list(np.random.uniform(-math.pi, math.pi, N))
+    Zn = list(np.random.normal(0, 0.1, N))
+    Yn = [Zn[i] + m_function(Xn[i]) for i in range(N)]
+    for x in X:
+        f,g=0,0
+        for k in range(L):
+            alfa = float(np.mean([
+                       Yn[i] * phi_function_sin(k, Xn[i]) for i in range(N)]))
+            beta = float(np.mean([
+                       phi_function_sin(k, Xn[i]) for i in range(N)]))
+            g += alfa * phi_function_sin(k, x)
+            f += beta * phi_function_sin(k, x)
+        if f==0:
+            mN.append(0)
+        else:
+            mN.append(g/f)
+    return mN
 
-def lab8_5(N: int, L: int, sigma_Z: List[float]):
-    Err = lab8.ErrInSigma(sigma=sigma_Z, N=N, L=L)
-    plt.plot(sigma_Z, Err)
-    plt.xlabel("sigma")
-    plt.ylabel("Err")
-    plt.show()
+def mNboth(X, L, N):
+    mN = []
+    Xn = list(np.random.uniform(-math.pi, math.pi, N))
+    Zn = list(np.random.normal(0, 0.01, N))
+    Yn = [Zn[i] + m_function(Xn[i]) for i in range(N)]
+    for x in X:
+        f,g=0,0
+        g2,f2=0,0
+        for k in range(L):
+            alfa = float(np.mean([
+                       Yn[i] * phi_function_sin(k, Xn[i]) for i in range(N)]))
+            beta = float(np.mean([
+                       phi_function_sin(k, Xn[i]) for i in range(N)]))
+            g += alfa * phi_function_sin(k, x)
+            f += beta * phi_function_sin(k, x)
 
-def lab9_6(N: int):
-    lab9.cov2(N)
+            alfa2 = float(np.mean([
+                Yn[i] * phi_function(k, Xn[i]) for i in range(N)]))
+            beta2 = float(np.mean([
+                phi_function(k, Xn[i]) for i in range(N)]))
+            g2 += alfa2 * phi_function(k, x)
+            f2 += beta2 * phi_function(k, x)
+        if f==0 or f2 == 0:
+            mN.append(0)
+        else:
+            mN.append(g/f+g2/f2)
+    return mN
 
-def lab9_7(N: int, L: int, sigma_Z: List[float]):
-    Err = lab9.ErrInSigma(sigma=sigma_Z, N=N, L=L)
-    plt.plot(sigma_Z, Err)
-    plt.xlabel("sigma")
-    plt.ylabel("Err")
-    plt.show()
 
-#lab7_2(N=10000, size=0.1)
-#lab7_4(L=25, X=list(np.linspace(-3, 3, 200)), N=500)
-#lab7_5(L=list(range(1,10)), Q=100, N=500)
 
-#lab7_6 to samo co 4 ale wstawić optymalne L
-#lab7_7 to samo ale na gorze zmienić "N" na "C"
+x = np.linspace(-math.pi, 1, 100)
+plt.plot(x, [m_function(X) for X in x])
 
-#lab8_4(N=1000)
-#lab8_5(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
-
-#lab9_6(N=1000)
-#lab9_7(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
+plt.plot(x, mNboth(x, 12, 100))
+plt.xlabel("Xn")
+plt.ylabel("Yn")
+plt.legend(["m(x)", "cos&sin"])
+plt.show()

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def m_function(x: float, a: float = 1) -> float:
+    x+=1
     if abs(x) > 2:
         return 0
     elif abs(x) < 1:
@@ -60,6 +61,39 @@ class StaticSystem:
                 mN.append(gN / fN)
         return mN
 
+    def mNsin(self, N: int, L: int, X: List[float]) -> List[float]:
+        Xn, Zn, Yn = self.simulate(N)
+        Xn = [x-math.pi/2 for x in Xn]
+        mN = []
+        for x in X:
+            gN = sum([
+                self.alfa_k(Xn, Yn, k) * self.phi(k=k, x=x-math.pi/2) for k in range(L + 1)])
+            fN = sum([
+                self.beta_k(Xn, k) * self.phi(k=k, x=x-math.pi/2) for k in range(L + 1)])
+            if fN == 0:
+                mN.append(0)
+            else:
+                mN.append(gN / fN)
+        return mN
+
+    def mNboth(self, N: int, L: int, X: List[float]) -> List[float]:
+        Xn, Zn, Yn = self.simulate(N)
+        mN = []
+        for x in X:
+            gN = sum([
+                self.alfa_k(Xn, Yn, k) * self.phi(k=k, x=x) for k in range(L + 1)]) + sum([
+                self.alfa_k([x-math.pi/2 for x in Xn], Yn, k) * self.phi(k=k, x=x-math.pi/2) for k in range(L + 1)])
+
+            fN = sum([
+                self.beta_k(Xn, k) * self.phi(k=k, x=x) for k in range(L + 1)]) + sum([
+                self.beta_k([x-math.pi/2 for x in Xn], k) * self.phi(k=k, x=x-math.pi/2) for k in range(L + 1)])
+            if fN == 0:
+                mN.append(0)
+            else:
+                mN.append(gN / fN)
+        return mN
+
+
     def plot_alfa_k(self, N: int, L: List[int]) -> List[float]:
         Xn, Zn, Yn = self.simulate(N)
         return [self.alfa_k(Xn, Yn, k) for k in L]
@@ -74,7 +108,7 @@ class StaticSystem:
 
 
 class MISO:
-    def __init__(self, D: int, a: List[float], b: float = 0, sigma_Z: float = 0.2, sigma_X: float = 0.2,
+    def __init__(self, D: int, a, b: float = 0, sigma_Z: float = 0.2, sigma_X: float = 0.2,
                  mu_X: float = 0, mu_Z: float = 0):
         if len(a) != D:
             raise Exception("Wrong a* vector size")
@@ -105,22 +139,32 @@ class MISO:
         for i in range(N):
             for j in range(N):
                 if j == i:
-                    R[i][j] = (1 + self.sigma_Z) * self.b ** 2
+                    R[i][j] = (1+self.b**2)*(self.sigma_Z**4+self.mu_Z**2)+2*self.b*self.mu_Z**2+self.mu_Z**2*(1+self.b)**2-2*self.mu_Z**2*(1+self.b)
                 elif j == i + 1 or j == i - 1:
-                    R[i][j] = self.b * self.sigma_Z
+                    R[i][j] = (1+self.b**2)*self.mu_Z**2+self.b*self.mu_Z**2+self.b*(self.sigma_Z**4+self.mu_Z**2)+self.mu_Z**2*(1+self.b)**2-2*self.mu_Z**2*(1+self.b)
+                else:
+                    R[i][j] = (1+self.b**2)*self.mu_Z**2+2*self.b*self.mu_Z**2+self.mu_Z**2*(1+self.b)**2-2*self.mu_Z**2*(1+self.b)
         return R
 
     def cov1(self, N: int):
         XN, ZN, YN = self.simulate(N=N, numpy=True)
+
         cov = np.linalg.inv(np.matmul(XN.T, XN)) * self.sigma_Z ** 2
-        plt.imshow(cov)
+
+        fig, ax = plt.subplots()
+        cp = ax.imshow(cov)
+        fig.colorbar(cp)
+        plt.title(f"N={N}, D={len(cov)}")
         plt.show()
 
     def cov2(self, N):
         XN, ZN, YN = self.simulate(N=N, numpy=True)
         R = self.R(ZN)
         cov = np.linalg.inv(XN.T @ XN) @ XN.T @ R @ XN @ np.linalg.inv(XN.T @ XN)
-        plt.imshow(cov)
+        fig, ax = plt.subplots()
+        cp = ax.imshow(cov)
+        fig.colorbar(cp)
+        plt.title(f"N={N}, D={len(cov)}")
         plt.show()
 
     def Err(self, N: int, L: int):
@@ -148,6 +192,98 @@ class MISO:
     def Zn(self, N: int) -> List[float]:
         epsilon = list(np.random.normal(self.mu_Z, self.sigma_Z ** 2, N + 1))
         return [epsilon[i + 1] + epsilon[i] * self.b for i in range(N)]
+
+    def Xn(self, N: int) -> List[List[float]]:
+        return [list(x) for x in np.random.normal(self.mu_X, self.sigma_X ** 2, (N, self.D))]
+
+
+class MISO2:
+    def __init__(self, D: int, a: List[float], b: float = 0, sigma_Z: float = 0.2, sigma_X: float = 0.2,
+                 mu_X: float = 0, mu_Z: float = 0, lamb = 0.5, K=10):
+        if len(a) != D:
+            raise Exception("Wrong a* vector size")
+        self.D, self.a, self.b, self.sigma_Z, self.sigma_X, self.mu_Z, self.mu_X = D, a, b, abs(sigma_Z), abs(
+            sigma_X), mu_Z, mu_X
+        self.lamb = lamb
+        self.K = K
+    def simulate(self, N: int, numpy: bool = False, XN: list = [], ZN: list = []):
+        N = max(1, N)
+        if len(ZN) != N:
+            ZN = self.Zn(N)
+        if len(XN) != N:
+            XN = self.Xn(N)
+        YN = []
+        for i, Zn in enumerate(ZN):
+            Yn = 0
+            for j, an in enumerate(self.a):
+                Yn += an * XN[i][j]
+            YN.append(Yn + Zn)
+        if numpy:
+            return np.array(XN), np.array(ZN), np.array(YN)
+        else:
+            return XN, ZN, YN
+
+    def R(self, ZN):
+        K = self.K
+        lamb = self.lamb
+        z = np.array(ZN)
+        N = len(ZN)
+        R = np.zeros((N, N))
+        for i in range(N):
+            for j in range(N):
+                for k1 in range(K + 1):
+                    for k2 in range(K + 1):
+                        R[i][j] += lamb ** (k1 + k2) * self.sigma_Z ** 4 * (i-k1 == j-k2)
+        return R
+
+    def cov1(self, N: int):
+        XN, ZN, YN = self.simulate(N=N, numpy=True)
+
+        cov = np.linalg.inv(np.matmul(XN.T, XN)) * self.sigma_Z ** 2
+
+        fig, ax = plt.subplots()
+        cp = ax.imshow(cov)
+        fig.colorbar(cp)
+        plt.title(f"N={N}, D={len(cov)}")
+        plt.show()
+
+    def cov2(self, N):
+        XN, ZN, YN = self.simulate(N=N, numpy=True)
+        R = self.R(ZN)
+        cov = np.linalg.inv(XN.T @ XN) @ XN.T @ R @ XN @ np.linalg.inv(XN.T @ XN)
+        fig, ax = plt.subplots()
+        cp = ax.imshow(cov)
+        fig.colorbar(cp)
+        plt.title(f"N={N}, D={len(cov)}")
+        plt.show()
+
+    def Err(self, N: int, L: int):
+        Err = 0
+        XN = np.array(self.Xn(N))
+        for l in range(L):
+            XN, _, YN = self.simulate(N=N, numpy=True, XN=XN)
+            aN = list(np.matmul(np.linalg.inv(np.array(np.matmul(XN.T, XN))), np.matmul(XN.T, YN)))
+            for i, a in enumerate(self.a):
+                aN[i] -= a
+            Err += float(np.linalg.norm(aN)) ** 2 / L
+        return Err
+
+    def ErrInSigma(self, sigma: List[float], N: int, L: int):
+        Err = []
+        for s in sigma:
+            self.sigma_Z = s
+            Err.append(self.Err(N, L))
+        return Err
+
+    def aN(self, N: int) -> List[float]:
+        XN, ZN, YN = self.simulate(N=N, numpy=True)
+        return list(np.matmul(np.linalg.inv(np.array(np.matmul(XN.T, XN))), np.matmul(XN.T, YN)))  # abomination
+
+    def Zn(self, N: int) -> List[float]:
+        K = self.K
+        lamb = self.lamb
+        epsilon = list(np.random.normal(self.mu_Z, self.sigma_Z ** 2, K))
+        return [sum([epsilon[k] * lamb ** k for k in range(K)]) for i in range(N)]
 
     def Xn(self, N: int) -> List[List[float]]:
         return [list(x) for x in np.random.normal(self.mu_X, self.sigma_X ** 2, (N, self.D))]

@@ -47,20 +47,30 @@ lab9 = MISO(D=D, b=0.5, sigma_Z=0.2, sigma_X=0.1, a=a)
 def lab8_4(N: int):
     lab8.cov1(N)
 
-def lab8_5(N: int, L: int, sigma_Z: List[float]):
-    Err = lab8.ErrInSigma(sigma=sigma_Z, N=N, L=L)
-    plt.plot(sigma_Z, Err)
-    plt.xlabel("sigma")
+def lab8_5(N: List[int], L: int):
+    Err = [lab8.Err(N_, L) for N_ in N]
+    plt.plot(N, Err)
+    plt.xlabel("N")
     plt.ylabel("Err")
     plt.show()
 
 def lab9_6(N: int):
     lab9.cov2(N)
 
-def lab9_7(N: int, L: int, sigma_Z: List[float]):
-    Err = lab9.ErrInSigma(sigma=sigma_Z, N=N, L=L)
-    plt.plot(sigma_Z, Err)
-    plt.xlabel("sigma")
+def lab9_7(N: List[int], L: int):
+    Err = [lab9.Err(N_, L) for N_ in N]
+    plt.plot(N, Err)
+    plt.xlabel("N")
+    plt.ylabel("Err")
+    plt.show()
+
+def lab8_5_lab9_7(N: List[int], L: int, lab = 8):
+    if lab==8:
+        Err = [lab8.Err(N_, L) for N_ in N]
+    else:
+        Err = [lab9.Err(N_, L) for N_ in N]
+    plt.plot(N, Err)
+    plt.xlabel("N")
     plt.ylabel("Err")
     plt.show()
 
@@ -72,7 +82,7 @@ def lab9_7(N: int, L: int, sigma_Z: List[float]):
 #lab7_7 to samo ale na gorze zmienić "N" na "C"
 
 #lab8_4(N=1000)
-#lab8_5(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
+#lab8_5(N=range(5,25), L=10)
 
 #lab9_6(N=1000)
-#lab9_7(N=500, L=20, sigma_Z=list(np.linspace(0.01,0.2,10)))
+#lab9_7(N=range(5,25), L=10)
