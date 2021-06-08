@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 
 def m_function(x: float, a: float = 1) -> float:
-    x+=1
     if abs(x) > 2:
         return 0
     elif abs(x) < 1:
