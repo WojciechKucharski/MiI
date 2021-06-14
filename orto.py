@@ -202,17 +202,120 @@ class MISO:
 
 
 class SISO:
-    def __init__(self, b: List[float], sigma_U: float = 0.2, sigma_Z: float = 1):
-        self.b, self.s, self.sigma_U, self.sigma_Z = b, len(b), sigma_U, sigma_Z
+    def __init__(self, b: List[float], sigma_U: float = 0.2, sigma_Z: float = 1, alfa: float = 0):
+        self.b, self.s, self.sigma_U, self.sigma_Z, self.alfa = b, len(b), sigma_U, sigma_Z, alfa
 
-    def simulate(self, N: int):
-        Un = np.random.normal(0, self.sigma_U ** 2, N)
-        Zn = np.random.normal(0, self.sigma_Z ** 2, N)
-        Yn = []
+    def UN(self, N: int):
+        return np.random.normal(0, self.sigma_U ** 2, N)
+
+    def ZN(self, N: int):
+        eN = np.random.normal(0, self.sigma_Z ** 2, N + 1)
+        return np.array([eN[i + 1] + self.alfa * eN[i] for i in range(N)])
+
+    def simulate(self, N: int, UN=None, ZN=None):
+        if UN is None:
+            UN = self.UN(N)
+        if ZN is None:
+            ZN = self.ZN(N)
+        fiN = np.zeros((N, self.s))
         for i in range(N):
-            Vn = 0
             for j in range(self.s):
                 if i - j >= 0:
-                    Vn += Un[i - j] * self.b[j]
-            Yn.append(Vn + Zn[i])
-        return Un, Zn, Yn
+                    fiN[i][j] = UN[i - j]
+        YN = fiN @ np.array(self.b) + ZN
+        return UN, fiN, ZN, YN
+
+    def bN(self, N: int, UN=None, ZN=None) -> List[float]:
+        UN, fiN, ZN, YN = self.simulate(N, UN, ZN)
+        bN = np.linalg.inv(fiN.T @ fiN) @ fiN.T @ YN
+        return bN
+
+    def bNGLS(self, N: int, UN=None, ZN=None) -> List[float]:
+        UN, fiN, ZN, YN = self.simulate(N, UN, ZN)
+        R = self.R(N)
+        return np.linalg.inv(fiN.T @ np.linalg.inv(R) @ fiN) @ fiN.T @ np.linalg.inv(R) @ YN
+
+    def Err(self, N: int, L: int = 100, GLS: bool = False):
+        UN = self.UN(N)
+        Err = 0
+        for l in range(L):
+            if GLS:
+                Err += np.linalg.norm(np.array(self.b) - self.bNGLS(N, UN)) ** 2 / L
+            else:
+                Err += np.linalg.norm(np.array(self.b) - self.bN(N, UN)) ** 2 / L
+        return Err
+
+    def R(self, N: int):
+        R = np.zeros((N, N))
+        for i in range(N):
+            R[i][i] = (1 + self.alfa ** 2) * self.sigma_Z
+            if i > 0:
+                R[i - 1][i] = self.alfa * self.sigma_Z
+                R[i][i - 1] = self.alfa * self.sigma_Z
+        return R
+
+
+class SISO2:
+    def __init__(self, theta: List[float], sigma_U: float = 1, sigma_Z: float = 1, alfa: float = -0.5):
+        self.theta, self.sigma_U, self.sigma_Z, self.alfa = theta, sigma_U, sigma_Z, alfa
+
+    def UN(self, N: int):
+        return np.random.normal(0, self.sigma_U ** 2, N)
+
+    def ZN(self, N: int):
+        eN = np.random.normal(0, self.sigma_Z ** 2, N + 1)
+        return np.array([eN[i + 1] + self.alfa * eN[i] for i in range(N)])
+
+
+
+    def Err(self, N: int, L: int = 100, IV: bool = False):
+        UN = self.UN(N)
+        Err = 0
+        for l in range(L):
+            if IV:
+                Err += np.linalg.norm(np.array(self.theta) - self.thetaIV(N, UN)) ** 2 / L
+            else:
+                Err += np.linalg.norm(np.array(self.theta) - self.thetaN(N, UN)) ** 2 / L
+        return Err
+
+    def simulate(self, N: int, UN=None, ZN=None):
+        if UN is None:
+            UN = self.UN(N)
+        if ZN is None:
+            ZN = self.ZN(N)
+
+        fiN = np.zeros((N, 2))
+        VN = [0] * N
+        YN = [0] * N
+
+        VN[0] = UN[0] * self.theta[1]
+        fiN[0][0] = UN[0]
+
+        for i in range(1, N):
+            VN[i] = self.theta[0] * VN[i - 1] + self.theta[1] * UN[i]
+            YN[i - 1] = VN[i - 1] + ZN[i - 1]
+            fiN[i][0], fiN[i][1] = UN[i], YN[i - 1]
+        YN[-1] = VN[-1] + ZN[-1]
+
+        return UN, fiN, ZN, YN
+
+    def thetaN(self, N: int, UN=None, ZN=None) -> List[float]:
+        UN, fiN, ZN, YN = self.simulate(N, UN, ZN)
+        YN = np.array(YN)
+        thetaN = np.linalg.inv(fiN.T @ fiN) @ fiN.T @ YN
+        return thetaN
+
+    def thetaIV(self, N: int, UN=None, ZN=None) -> List[float]:
+        UN, fiN, ZN, YN = self.simulate(N, UN, ZN)
+        YN = np.array(YN)
+        thetaN = np.linalg.inv(fiN.T @ fiN) @ fiN.T @ YN
+        psiN = np.zeros((N, 2))
+        psiN[0][0] = UN[0]
+
+        for i in range(1, N):
+            psiN[i][0] = UN[i]
+            psiN[i][1] = thetaN[0] * psiN[i - 1][1] + thetaN[1] * UN[i]
+
+        thetaIV = np.linalg.inv(psiN.T @ fiN) @ psiN.T @ YN
+
+        return thetaIV
